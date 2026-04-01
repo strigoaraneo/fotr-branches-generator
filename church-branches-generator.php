@@ -3,22 +3,45 @@
    * Plugin Name: Church Branches and Programs Generator
    * Description: Create, edit, and manage pages for each branch location. Includes placeholders and Media Library integration.
    * Version: 1.7.0
-   * Author: David Cai, Pavansrivatsa Meka
+   * Author: David Cai, Pavansrivatsa Meka, Shanmukha Harshith
    * License: GPL-2.0+
    */
   
   if (!defined('WPINC')) { die; }
   
-  define('CHURCH_BRANCHES_GENERATOR_VERSION', '1.7.0');
-  define('CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
-  define('CHURCH_BRANCHES_GENERATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
+   define('CHURCH_BRANCHES_GENERATOR_VERSION', '1.0.0');
+   define('CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
+   define('CHURCH_BRANCHES_GENERATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+   if (!defined('CHURCH_BRANCHES_GENERATOR_TABLE_PREFIX')) {
+       define('CHURCH_BRANCHES_GENERATOR_TABLE_PREFIX', 'fotr_church_');
+   }
   
-  require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
-  function run_church_branches_generator() {
-      $plugin = new Church_Branches_Generator_Plugin();
-      $plugin->run();
+  
+  function activate_church_branches_generator() {
+      require_once CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-activator.php';
+      Church_Branches_Generator_Activator::activate();
   }
-  run_church_branches_generator();
+  register_activation_hook(__FILE__, 'activate_church_branches_generator');
+  
+  
+  
+  function deactivate_church_branches_generator() {
+      require_once CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-deactivator.php';
+      Church_Branches_Generator_Deactivator::deactivate();
+  }
+  register_deactivation_hook(__FILE__, 'deactivate_church_branches_generator');
+  
+  
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-branch-handler.php';
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-shortcodes.php';
+   
+   function run_church_branches_generator() {
+       $plugin = new Church_Branches_Generator_Plugin();
+       $plugin->run();
+   }
+   run_church_branches_generator();
   
   class Branch_Creator {
 
@@ -221,12 +244,25 @@
         </main>
 HTML;
 
+        // Check if branch already exists
+        $branch_handler = new Church_Branches_Generator_Branch_Handler();
+        if ( $branch_handler->branch_exists( $branch_name ) ) {
+            echo '<div class="notice notice-error"><p>A branch with this name already exists.</p></div>';
+            return;
+        }
+
+        // Create WordPress page with shortcode placeholder
+        $parent_page = get_page_by_path( 'website' );
+        $parent_id = $parent_page ? $parent_page->ID : 0;
+
         $page_data = array(
             'ID'           => $edit_id,
             'post_title'   => $branch_name,
-            'post_content' => $page_content,
+            'post_content'  => '[church_branch id="{branch_id}"]',
             'post_status'  => 'publish',
             'post_type'    => 'page',
+            'post_author'   => get_current_user_id(),
+            'post_parent'   => $parent_id,
             'post_name'    => sanitize_title($branch_name) . '-branch',
             'meta_input'   => array(
                 '_wp_page_template' => 'elementor_canvas',
@@ -241,8 +277,45 @@ HTML;
             )
         );
 
-        wp_insert_post($page_data);
-        echo "<div class='notice notice-success'><p>Branch details updated!</p></div>";
+        // Insert page first (we need page_id for the branch record)
+        $page_id = wp_insert_post($page_data);
+
+        if (is_wp_error($page_id)) {
+            echo '<div class="notice notice-error"><p>There was an error creating the page. Please try again.</p></div>';
+            return;
+        } else {
+            echo "<div class='notice notice-success'><p>Branch details updated!</p></div>";
+        }
+
+        // Save branch data to database
+        $branch_id = $branch_handler->create_branch(array(
+            'branch_name'   => $branch_name,
+            'address'       => $address,
+            'phone'         => $phone,
+            'email'         => $email,
+            'service_times' => $service_times,
+            'lead_pastor'   => $lead_pastor,
+            'page_id'       => $page_id,
+        ));
+
+        if ( is_wp_error( $branch_id ) ) {
+            // Clean up the page if branch creation failed
+            wp_delete_post( $page_id, true );
+            echo '<div class="notice notice-error"><p>There was an error saving branch data. Please try again.</p></div>';
+            return;
+        }
+
+        // Update page content with actual branch ID
+        wp_update_post( array(
+            'ID'           => $page_id,
+            'post_content' => '[church_branch id="' . $branch_id . '"]',
+        ) );
+
+        // Success Message
+        $link = get_permalink( $page_id );
+        echo '<div class="notice notice-success is-dismissible">';
+        echo "<p>Branch created successfully! <a href='{$link}' target='_blank'>View Page</a></p>";
+        echo '</div>';
     }
 }
 new Branch_Creator();

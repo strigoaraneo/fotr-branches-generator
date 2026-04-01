@@ -12,10 +12,13 @@
         $this->set_locale();
         $this->define_admin_hooks();
         $this->define_public_hooks();
+        
+        new Church_Branches_Generator_Shortcodes();
     }
 
     private function load_dependencies() {
         require_once CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-loader.php';
+        require_once CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-shortcodes.php';
         require_once CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'admin/class-admin.php';
         require_once CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'public/class-public.php';
         $this->loader = new Church_Branches_Generator_Loader();
