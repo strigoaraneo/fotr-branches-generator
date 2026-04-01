@@ -15,9 +15,13 @@
       die;
   }
   
-  define('CHURCH_BRANCHES_GENERATOR_VERSION', '1.0.0');
-  define('CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
-  define('CHURCH_BRANCHES_GENERATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
+   define('CHURCH_BRANCHES_GENERATOR_VERSION', '1.0.0');
+   define('CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
+   define('CHURCH_BRANCHES_GENERATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+   if (!defined('CHURCH_BRANCHES_GENERATOR_TABLE_PREFIX')) {
+       define('CHURCH_BRANCHES_GENERATOR_TABLE_PREFIX', 'fotr_church_');
+   }
   
   
   function activate_church_branches_generator() {
@@ -35,13 +39,15 @@
   register_deactivation_hook(__FILE__, 'deactivate_church_branches_generator');
   
   
-  require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
-  
-  function run_church_branches_generator() {
-      $plugin = new Church_Branches_Generator_Plugin();
-      $plugin->run();
-  }
-  run_church_branches_generator();
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-branch-handler.php';
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-shortcodes.php';
+   
+   function run_church_branches_generator() {
+       $plugin = new Church_Branches_Generator_Plugin();
+       $plugin->run();
+   }
+   run_church_branches_generator();
   
 
   class Branch_Creator {
@@ -127,153 +133,64 @@
         $service_times = sanitize_text_field( $_POST['service_times'] );
         $lead_pastor   = sanitize_text_field( $_POST['lead_pastor'] );
 
-        // 1. Define the HTML Template
+        // Check if branch already exists
+        $branch_handler = new Church_Branches_Generator_Branch_Handler();
+        if ( $branch_handler->branch_exists( $branch_name ) ) {
+            echo '<div class="notice notice-error"><p>A branch with this name already exists.</p></div>';
+            return;
+        }
 
-        // Image Variables
-        $location_img = plugin_dir_url(__FILE__) . 'public/images/ion_location-outline.png';
-        $phone_img = plugin_dir_url(__FILE__) . 'public/images/mingcute_phone-fill.png';
-
-
-
-        $page_content = <<<HTML
-
-        <main class="branch-page-wrapper">
-      <section class="branch-hero" role="banner">
-        <div class="hero-content">
-          <h1>{$branch_name} State Branch</h1>
-          <p>
-            The {$branch_name} State branch is a vibrant community of believers
-            committed to spreading the gospel and serving the community with
-            love and compassion.
-          </p>
-        </div>
-      </section>
-
-      <section class="branch-content">
-        <div class="branch-grid">
-          <article class="branch-card" aria-label="Contact Information">
-            <div class="branch-info">
-              <h2 class="section-title">Contact Information</h2>
-              <div class="info-list">
-                <div class="info-item">
-                  <div class="info-item-icon"><img src="{$location_img}" alt="Location icon" /></div>
-                  <div>
-                    <h4>Address</h4>
-                    <p>{$address}</p>
-                  </div>
-                </div>
-                <div class="info-item">
-                  <div class="info-item-icon"><img src="{$phone_img}" alt="Phone icon" /></div>
-                  <div>
-                    <h4>Phone</h4>
-                    <p><a href="tel:{$phone}">{$phone}</a></p>
-                  </div>
-                </div>
-                <div class="info-item">
-                  <div class="info-item-icon"><img src="{$location_img}" alt="Location icon" /></div>
-                  <div>
-                    <h4>Email</h4>
-                    <p><a href="mailto:{$email}">{$email}</a></p>
-                  </div>
-                </div>
-                <div class="info-item">
-                  <div class="info-item-icon"><img src="{$location_img}" alt="Location icon" /></div>
-                  <div>
-                    <h4>Service Times</h4>
-                    <p>{$service_times}</p>
-                  </div>
-                </div>
-                <div class="info-item">
-                  <div class="info-item-icon"><img src="{$location_img}" alt="Location icon" /></div>
-                  <div>
-                    <h4>Lead Pastor</h4>
-                    <p>{$lead_pastor}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="get-directions-btn">
-              <a href="#" class="btn btn-primary">Get Directions</a>
-            </div>
-          </article>
-
-          <article class="branch-card" aria-label="About and Services">
-            <h2 class="section-title">About Our Branch</h2>
-            <p class="about-text">
-              Welcome to {$branch_name} State Branch! We are a vibrant community
-              of believers dedicated to worship, fellowship, and service. Our
-              church is committed to creating an environment where everyone can
-              experience the love of God and grow in their faith.
-            </p>
-            <p class="about-text">
-              Whether you're new to the area, searching for a church home, or
-              simply exploring faith, we would love to meet you. Join us for our
-              Sunday services and experience the warmth of our community.
-            </p>
-
-            <div class="services-card">
-              <h3>Weekly Services &amp; Activities</h3>
-              <div class="service-row">
-                <h4>Sunday Worship Service</h4>
-                <p>Main service with inspiring worship and teaching</p>
-              </div>
-              <div class="service-row">
-                <h4>Tuesday Bible Study</h4>
-                <p>Deep dive into God's Word – 6:00 PM</p>
-              </div>
-              <div class="service-row">
-                <h4>Thursday Prayer Meeting</h4>
-                <p>Intercessory prayer and worship – 5:30 PM</p>
-              </div>
-              <div class="service-row">
-                <h4>Youth Fellowship</h4>
-                <p>Every Saturday – 4:00 PM</p>
-              </div>
-            </div>
-          </article>
-        </div>
-        </section>
-      
-      
-      <section class="cta-section" aria-label="Visit Us This Sunday">
-          <h2>Visit Us This Sunday</h2>
-          <p>We can't wait to welcome you into our church family!</p>
-          <div class="cta-buttons">
-            <a href="#" class="btn btn-primary">View all Churches</a>
-            <a href="#" class="btn btn-outline">Get Directions</a>
-          </div>
-		</section>
-    </main>
-HTML;
-
-        // 2. Setup Page Arguments
-        // We check if a parent page with slug 'website' exists.
+        // Create WordPress page with shortcode placeholder
         $parent_page = get_page_by_path( 'website' );
         $parent_id = $parent_page ? $parent_page->ID : 0;
 
         $page_data = array(
-            'post_title'    => $branch_name, // The Title input
-            'post_content'  => $page_content, // The HTML content
+            'post_title'    => $branch_name,
+            'post_content'  => '[church_branch id="{branch_id}"]',
             'post_status'   => 'publish',
             'post_type'     => 'page',
             'post_author'   => get_current_user_id(),
-            'post_parent'   => $parent_id, // Tries to set parent to /website/
-            'post_name'     => sanitize_title( $branch_name ) . '-branch' // Creates the slug
+            'post_parent'   => $parent_id,
+            'post_name'     => sanitize_title( $branch_name ) . '-branch'
         );
 
-        // 3. Insert the Page
+        // Insert page first (we need page_id for the branch record)
         $page_id = wp_insert_post( $page_data );
 
-        if ( ! is_wp_error( $page_id ) ) {
-            // Success Message
-            // We construct the URL to show exactly where it was created
-            $link = get_permalink( $page_id );
-            echo '<div class="notice notice-success is-dismissible">';
-            echo "<p>Page created successfully! <a href='{$link}' target='_blank'>View Page</a></p>";
-            echo '</div>';
-        } else {
+        if ( is_wp_error( $page_id ) ) {
             echo '<div class="notice notice-error"><p>There was an error creating the page. Please try again.</p></div>';
+            return;
         }
+
+        // Save branch data to database
+        $branch_id = $branch_handler->create_branch( array(
+            'branch_name'   => $branch_name,
+            'address'       => $address,
+            'phone'         => $phone,
+            'email'         => $email,
+            'service_times' => $service_times,
+            'lead_pastor'   => $lead_pastor,
+            'page_id'       => $page_id,
+        ) );
+
+        if ( is_wp_error( $branch_id ) ) {
+            // Clean up the page if branch creation failed
+            wp_delete_post( $page_id, true );
+            echo '<div class="notice notice-error"><p>There was an error saving branch data. Please try again.</p></div>';
+            return;
+        }
+
+        // Update page content with actual branch ID
+        wp_update_post( array(
+            'ID'           => $page_id,
+            'post_content' => '[church_branch id="' . $branch_id . '"]',
+        ) );
+
+        // Success Message
+        $link = get_permalink( $page_id );
+        echo '<div class="notice notice-success is-dismissible">';
+        echo "<p>Branch created successfully! <a href='{$link}' target='_blank'>View Page</a></p>";
+        echo '</div>';
     }
 }
 
