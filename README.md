@@ -12,27 +12,13 @@ This plugin enables administrators to manage church branches and their associate
 - **Programs Management** per branch with add/delete functionality
 - **Settings Page** to customize brand colors and typography
 
-### Backend-Driven vs Elementor
-
-- **Eliminated** Elementor dependency for content updates
-- **Replaced** with dynamic database-driven content
-- **Administrators** manage content through WordPress admin
-- **End users** never need to touch Elementor
-
-### Structured Data
-
-- Programs and services use **dedicated database tables** (not post meta)
-- Efficient querying and scaling
-- Proper relationships with foreign keys
-- Chronological ordering support
-
 ### Scalability
 
 - Supports unlimited branches
 - Supports unlimited programs per branch
 - Supports unlimited services per branch
 - Efficient database queries with proper indexing
-- No hardcoding of content on pages
+- No need to hardcode any content on pages
 
 ## Installation
 
@@ -40,7 +26,7 @@ This plugin enables administrators to manage church branches and their associate
 2. **Activate the plugin** from WordPress Admin → Plugins
 3. The database tables will be automatically created on activation
 
-## Accessing the Admin Interface
+## Using the Admin Interface
 
 Once activated, you'll see a new **"Church Branches"** menu in the WordPress Admin sidebar with the following sections:
 
@@ -90,14 +76,14 @@ Once activated, you'll see a new **"Church Branches"** menu in the WordPress Adm
 
 ### Branch Page Display
 
-When you create a branch named "Lagos", a page is automatically created that displays:
+When you create a branch, a page is automatically created that displays:
 
 - **Hero Section**: Branch name with uploaded background image
 - **Contact Information**: Address, phone, email, service times, pastor name
 - **About Us Section**: Rich text content
 - **Services & Activities**: Listed services for the branch
 - **Programs Section**: Programs grouped by type (Weekly, Monthly, etc.)
-- **Call-to-Action Section**: "Visit Us This Sunday" with Get Directions button
+- **A Call-to-Action Section**: "Visit Us This Sunday" with Get Directions button
 
 ### Shortcode (Advanced)
 
@@ -151,6 +137,13 @@ Where `id` is the branch ID from the database.
 3. The item is instantly removed
 
 **Note:** Deleting a branch will also delete all its associated programs and services.
+
+### Problems Solved
+
+- **Eliminated** Elementor dependency for content updates
+- **Replaced** with dynamic database-driven content
+- **Administrators** manage content through WordPress admin
+- **End users** never need to touch Elementor
 
 ## Features Implemented
 
