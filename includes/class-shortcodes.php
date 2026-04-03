@@ -41,6 +41,18 @@ class Church_Branches_Generator_Shortcodes {
         $about_us_text = wp_kses_post($branch['about_us_text']);
         $directions_info = wp_kses_post($branch['directions_info']);
 
+        // Get hero image URL from post meta
+        $hero_img_url = '';
+        if ($branch['page_id']) {
+            $img_id = get_post_meta($branch['page_id'], '_br_hero_id', true);
+            if ($img_id) {
+                $hero_img_url = wp_get_attachment_url($img_id);
+            }
+        }
+        if (!$hero_img_url) {
+            $hero_img_url = 'https://womenofconnections.org/testingsite/wp-content/uploads/2026/03/318b640e08877549ff0fd0796e94431e9cdf7f77-scaled.jpg';
+        }
+
         // Fetch services for this branch
         $services_table = $prefix . 'services';
         $services = $wpdb->get_results(
@@ -61,7 +73,19 @@ class Church_Branches_Generator_Shortcodes {
             foreach ($services as $service) {
                 $services_html .= '<div class="service-row">';
                 $services_html .= '<h4>' . esc_html($service['service_name']) . '</h4>';
-                $services_html .= '<p>' . esc_html($service['description']) . '</p>';
+                if (!empty($service['day_of_week']) || !empty($service['time'])) {
+                    $services_html .= '<p class="service-day-time">';
+                    if (!empty($service['day_of_week'])) {
+                        $services_html .= 'Every ' . esc_html($service['day_of_week']);
+                    }
+                    if (!empty($service['time'])) {
+                        $services_html .= ' – ' . esc_html($service['time']);
+                    }
+                    $services_html .= '</p>';
+                }
+                if (!empty($service['description'])) {
+                    $services_html .= '<p>' . esc_html($service['description']) . '</p>';
+                }
                 $services_html .= '</div>';
             }
         } else {
@@ -109,12 +133,31 @@ class Church_Branches_Generator_Shortcodes {
         }
 
         // Build directions popup HTML
-        $directions_html = '<div id="branch-directions-popup" class="branch-directions-popup" style="display: none;">';
+        $directions_html = '<div id="branch-directions-popup" class="branch-directions-popup popup-hidden">';
         $directions_html .= '<div class="directions-popup-content">';
-        $directions_html .= '<button class="directions-popup-close" onclick="document.getElementById(\'branch-directions-popup\').style.display=\'none\';">&times;</button>';
+        $directions_html .= '<button class="directions-popup-close" onclick="document.getElementById(\'branch-directions-popup\').classList.toggle(\'popup-hidden\');">×</button>';
         $directions_html .= '<h2>Directions to ' . $branch_name . '</h2>';
         $directions_html .= '<div class="directions-map">';
         $directions_html .= '<iframe src="https://www.google.com/maps?q=' . urlencode($address) . '&output=embed" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>';
+        $directions_html .= '</div>';
+        $directions_html .= '<div class="directions-boxes-container">';
+        $directions_html .= '<div class="travel-tips-box">';
+        $directions_html .= '<h3>Travel Tips</h3>';
+        $directions_html .= '<ul>';
+        $directions_html .= '<li>Arrive 15-20 minutes early to find parking and seating</li>';
+        $directions_html .= '<li>Parking is available on church premises</li>';
+        $directions_html .= '<li>Public transportation routes available nearby</li>';
+        $directions_html .= '<li>Call us if you need assistance finding the location</li>';
+        $directions_html .= '</ul>';
+        $directions_html .= '</div>';
+        $directions_html .= '<div class="nearby-landmarks-box">';
+        $directions_html .= '<h3>Nearby Landmarks</h3>';
+        $directions_html .= '<ul>';
+        $directions_html .= '<li>Look for the church building with a distinctive cross</li>';
+        $directions_html .= '<li>Located near major road intersections</li>';
+        $directions_html .= '<li>Well-signposted church entrance</li>';
+        $directions_html .= '</ul>';
+        $directions_html .= '</div>';
         $directions_html .= '</div>';
         if (!empty($directions_info)) {
             $directions_html .= '<div class="directions-info">';
@@ -124,9 +167,11 @@ class Church_Branches_Generator_Shortcodes {
         $directions_html .= '</div>';
         $directions_html .= '</div>';
 
+        $hero_bg_style = "background:\n    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),\n    url('{$hero_img_url}')\n      no-repeat center/cover;";
+
         $html = <<<HTML
 <main class="branch-page-wrapper">
-    <section class="branch-hero" role="banner">
+    <section class="branch-hero" role="banner" style="{$hero_bg_style}">
         <div class="hero-content">
             <h1>{$branch_name} State Branch</h1>
             <p>

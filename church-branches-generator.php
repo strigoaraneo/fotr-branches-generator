@@ -35,6 +35,8 @@
   
    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-branch-handler.php';
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-program-handler.php';
+   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-service-handler.php';
    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-shortcodes.php';
    
    function run_church_branches_generator() {
@@ -55,11 +57,25 @@
         wp_enqueue_media();
     }
 
+    /**
+     * Add admin menu
+     *
+     * Adds a menu page and a submenu page under Branch Creator menu item.
+     *
+     * @since 1.0.0
+     */
     public function add_admin_menu() {
         add_menu_page('Branch Creator', 'Branch Creator', 'manage_options', 'branch-creator', array( $this, 'render_admin_page' ), 'dashicons-admin-page', 100);
         add_submenu_page('branch-creator', 'All Branches', 'All Branches', 'manage_options', 'branch-list', array($this, 'render_branch_list'));
     }
 
+    /**
+     * Renders a list of all branches created with the plugin.
+     *
+     * The list includes the branch name and links to edit the branch details and view the branch page.
+     *
+     * @since 1.0.0
+     */
     public function render_branch_list() {
         $pages = get_pages(array('meta_key' => '_is_church_branch', 'meta_value' => 'yes'));
         echo '<div class="wrap"><h1>Manage Branches</h1><table class="wp-list-table widefat fixed striped"><thead><tr><th>Branch</th><th>Actions</th></tr></thead><tbody>';
@@ -70,9 +86,24 @@
         echo '</tbody></table></div>';
     }
 
+/**
+ * Renders the admin page for creating and editing branches.
+ *
+ * @since 1.0.0
+ */
     public function render_admin_page() {
         $edit_id = isset($_GET['edit_id']) ? intval($_GET['edit_id']) : 0;
         $meta = [];
+        
+        // Verify database table exists
+        global $wpdb;
+        $table_name = $wpdb->prefix . CHURCH_BRANCHES_GENERATOR_TABLE_PREFIX . 'branches';
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+        
+        if (!$table_exists) {
+            echo '<div class="notice notice-error"><p><strong>Database Error:</strong> The branches table does not exist. Please deactivate and reactivate the plugin to create the table.</p></div>';
+        }
+        
         if($edit_id) {
             $meta['name'] = get_the_title($edit_id);
             $meta['address'] = get_post_meta($edit_id, '_br_address', true);
@@ -99,7 +130,7 @@
                         <td><input name="branch_name" type="text" value="<?php echo @$meta['name']; ?>" class="regular-text" placeholder="e.g. Lagos" required></td>
                     </tr>
                     <tr>
-                        <th scope="row">Hero Image</th>
+                        <th scope="row">Background Image</th>
                         <td>
                             <div id="branch_image_preview" style="margin-bottom:10px;">
                                 <?php if(!empty($meta['img_url'])): ?>
@@ -188,6 +219,13 @@
         <?php
     }
 
+/**
+ * Process branch creation form submission.
+ *
+ * @param int $edit_id The ID of the branch to edit, if any.
+ * @return void
+ */
+
     private function process_branch_creation($edit_id = 0) {
         $branch_name   = sanitize_text_field( $_POST['branch_name'] );
         $address       = sanitize_text_field( $_POST['address'] );
@@ -210,6 +248,8 @@
                 }
             }
         }
+
+        // Services will be managed separately via the Services management page section
 
         $url = CHURCH_BRANCHES_GENERATOR_PLUGIN_URL . 'public/images/';
         $location_img = $url . 'ion_location-outline.png';
@@ -283,8 +323,6 @@ HTML;
         if (is_wp_error($page_id)) {
             echo '<div class="notice notice-error"><p>There was an error creating the page. Please try again.</p></div>';
             return;
-        } else {
-            echo "<div class='notice notice-success'><p>Branch details updated!</p></div>";
         }
 
         // Save branch data to database
@@ -301,7 +339,8 @@ HTML;
         if ( is_wp_error( $branch_id ) ) {
             // Clean up the page if branch creation failed
             wp_delete_post( $page_id, true );
-            echo '<div class="notice notice-error"><p>There was an error saving branch data. Please try again.</p></div>';
+            $error_msg = $branch_id->get_error_message();
+            echo '<div class="notice notice-error"><p>There was an error saving branch data: ' . esc_html($error_msg) . '</p></div>';
             return;
         }
 
@@ -318,4 +357,9 @@ HTML;
         echo '</div>';
     }
 }
-new Branch_Creator();
+
+// Note to point out: Branch_Creator has been replaced with Church_Branches_Generator_Admin
+// The old Branch_Creator class is kept for reference but is NOT instantiated
+// Instead, the new admin system is loaded via the Church_Branches_Generator_Plugin class
+// if the old Branch_Creator class will never be used, we should delete it
+// new Branch_Creator();

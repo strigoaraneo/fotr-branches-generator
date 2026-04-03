@@ -76,7 +76,7 @@ body {
   background:
     linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
     url("https://womenofconnections.org/testingsite/wp-content/uploads/2026/03/318b640e08877549ff0fd0796e94431e9cdf7f77-scaled.jpg")
-      no-repeat center/cover;
+      no-repeat fixed center/cover;
   background-attachment: fixed;
   display: flex;
   align-items: flex-end;
@@ -145,9 +145,28 @@ body {
 }
 
 .get-directions-btn .btn {
-  width: 100%;
-  text-align: center;
-  display: block;
+  width: 100% !important;
+  text-align: center !important;
+  display: block !important;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  background: var(--primary) !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  padding: 0.88rem 1.27rem !important;
+  font-size: 1.3rem !important;
+  font-weight: 400 !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease !important;
+}
+
+.get-directions-btn .btn:hover {
+  background: #c09520 !important;
+  transform: translateY(-2px) !important;
 }
 
 .section-title {
@@ -256,6 +275,10 @@ body {
   font-size: 1rem;
   font-weight: 400;
   font-family: var(--font-secondary);
+}
+
+.service-day-time {
+  font-weight: 500 !important;
 }
 
 .cta-section {
@@ -447,5 +470,229 @@ body {
     height: 32px;
     font-size: 0.9rem;
     flex-shrink: 0;
+  }
+}
+
+/* Get Directions Popup Styles */
+.branch-directions-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.branch-directions-popup.popup-hidden {
+  display: none !important;
+}
+
+.directions-popup-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 60%;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.directions-popup-content h2 {
+  font-family: "Inter", Sans-serif;
+  margin: 0 0 1.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.directions-popup-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 10001;
+}
+
+.directions-popup-close:hover {
+  color: #333;
+}
+
+.directions-map {
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.directions-map iframe {
+  display: block;
+  width: 100%;
+  height: 300px;
+  border: none;
+}
+
+.directions-info {
+  background: #f5f5f5;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+.directions-info p {
+  margin: 0.5rem 0;
+}
+
+.directions-info ul,
+.directions-info ol {
+  margin: 1rem 0;
+  padding-left: 20px;
+}
+
+.directions-info li {
+  margin: 0.5rem 0;
+}
+
+.directions-popup-content > *:not(.directions-popup-close) {
+  padding: 0 20px;
+}
+
+.directions-popup-content > h2 {
+  padding: 20px 20px 0 20px !important;
+}
+
+.directions-popup-close {
+  position: absolute !important;
+  top: 15px !important;
+  right: 15px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  font-size: 28px !important;
+  color: #999 !important;
+  cursor: pointer !important;
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: color 0.2s ease !important;
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+}
+
+.directions-boxes-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1.5rem 20px;
+}
+
+.travel-tips-box {
+  background: #9d8327;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nearby-landmarks-box {
+  background: white;
+  border: 2px solid #731e1d;
+  border-radius: 1rem;
+  border-width: 0.15rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.travel-tips-box h3 {
+  color: #fffefe !important;
+  margin: 0 0 1rem 0 !important;
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+}
+
+.nearby-landmarks-box h3 {
+  color: #383837 !important;
+  margin: 0 0 1rem 0 !important;
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+}
+
+.travel-tips-box ul,
+.nearby-landmarks-box ul {
+  color: #f5f6f5 !important;
+  margin: 0 !important;
+  padding-left: 1.5rem !important;
+  list-style: disc !important;
+}
+
+.travel-tips-box li {
+  margin: 0.6rem 0 !important;
+  color: #f5f6f5 !important;
+  font-size: 1.1rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+}
+
+.nearby-landmarks-box li {
+  margin: 0.6rem 0 !important;
+  color: #383837 !important;
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+@media (max-width: 640px) {
+  .directions-boxes-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1rem 20px;
+  }
+  .directions-popup-content {
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+
+  .directions-map iframe {
+    height: 250px;
+  }
+
+  .directions-popup-content h2 {
+    font-size: 1.4rem;
+  }
+
+  .directions-popup-close {
+    font-size: 24px;
+    top: 10px;
+    right: 10px;
   }
 }

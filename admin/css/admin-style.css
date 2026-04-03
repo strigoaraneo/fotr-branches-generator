@@ -1,1 +1,224 @@
-/* Admin styles go here */
+/* Church Branches Generator Admin Styles */
+
+.cbg-branch-form,
+.cbg-service-form,
+.cbg-program-form,
+.cbg-settings-form {
+  max-width: 800px;
+}
+
+.cbg-branch-form table.form-table,
+.cbg-service-form table.form-table,
+.cbg-program-form table.form-table,
+.cbg-settings-form table.form-table {
+  background: white;
+  border-collapse: collapse;
+}
+
+.cbg-branch-form table.form-table tr,
+.cbg-service-form table.form-table tr,
+.cbg-program-form table.form-table tr,
+.cbg-settings-form table.form-table tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cbg-branch-form table.form-table th,
+.cbg-service-form table.form-table th,
+.cbg-program-form table.form-table th,
+.cbg-settings-form table.form-table th {
+  text-align: left;
+  font-weight: 600;
+  padding: 12px;
+  background: #f5f5f5;
+}
+
+.cbg-branch-form table.form-table td,
+.cbg-service-form table.form-table td,
+.cbg-program-form table.form-table td,
+.cbg-settings-form table.form-table td {
+  padding: 12px;
+}
+
+.cbg-branch-form input[type="text"],
+.cbg-branch-form input[type="email"],
+.cbg-branch-form input[type="color"],
+.cbg-service-form input[type="text"],
+.cbg-service-form textarea,
+.cbg-service-form select,
+.cbg-program-form input[type="text"],
+.cbg-program-form textarea,
+.cbg-program-form select,
+.cbg-settings-form input[type="color"],
+.cbg-settings-form select {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.cbg-branch-form textarea,
+.cbg-service-form textarea,
+.cbg-program-form textarea {
+  height: 120px;
+  font-family: inherit;
+}
+
+/* Dashboard Styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.dashboard-card {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.dashboard-card h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.dashboard-card p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.dashboard-card .button {
+  margin-top: 10px;
+}
+
+/* Button Styles */
+.button-link-delete {
+  color: #dc3545;
+}
+
+.button-link-delete:hover {
+  background-color: #f8d7da;
+}
+
+/* Form Sections */
+.cbg-service-form,
+.cbg-program-form {
+  background: #f1f1f1;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 5px;
+  border-left: 4px solid #0073aa;
+}
+
+/* Table Improvements */
+.wp-list-table thead {
+  background-color: #f5f5f5;
+}
+
+.wp-list-table th {
+  font-weight: 600;
+  vertical-align: middle;
+  padding: 15px;
+}
+
+.wp-list-table td {
+  padding: 15px;
+  vertical-align: middle;
+}
+
+/* Branch Selection Dropdown */
+#branch_select {
+  padding: 8px 12px;
+  min-width: 200px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Media Preview */
+#branch_image_preview {
+  margin-bottom: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#branch_image_preview img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: block;
+}
+
+/* Color Field */
+.color-field {
+  width: 60px;
+  height: 40px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Success/Error Messages */
+.notice {
+  margin: 20px 0;
+  padding: 12px;
+  border-left: 4px solid;
+  border-radius: 4px;
+}
+
+.notice-success {
+  background-color: #d4edda;
+  color: #155724;
+  border-left-color: #28a745;
+}
+
+.notice-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left-color: #dc3545;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cbg-branch-form input[type="text"],
+  .cbg-branch-form input[type="email"],
+  .cbg-branch-form input[type="color"],
+  .cbg-service-form input[type="text"],
+  .cbg-service-form select,
+  .cbg-program-form input[type="text"],
+  .cbg-program-form select,
+  .cbg-settings-form input[type="color"],
+  .cbg-settings-form select {
+    max-width: 100%;
+  }
+
+  .wp-list-table {
+    font-size: 13px;
+  }
+
+  .wp-list-table th,
+  .wp-list-table td {
+    padding: 10px 8px;
+  }
+
+  .button {
+    display: inline-block;
+    margin-bottom: 5px;
+  }
+}
