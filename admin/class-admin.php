@@ -175,6 +175,7 @@ class Church_Branches_Generator_Admin {
             $meta['about_us'] = $branch_data['about_us_text'];
             $meta['directions_info'] = $branch_data['directions_info'];
             $meta['language'] = isset($branch_data['language']) ? $branch_data['language'] : 'english';
+            $meta['branch_description'] = isset($branch_data['branch_description']) ? $branch_data['branch_description'] : '';
             $meta['branch_id'] = $branch_data['id'];
             $meta['img_id'] = get_post_meta($edit_id, '_br_hero_id', true);
             $meta['img_url'] = wp_get_attachment_url($meta['img_id']);
@@ -221,6 +222,13 @@ class Church_Branches_Generator_Admin {
                                 <option value="english" <?php selected(isset($meta['language']) ? $meta['language'] : 'english', 'english'); ?>>English</option>
                                 <option value="yoruba" <?php selected(isset($meta['language']) ? $meta['language'] : 'english', 'yoruba'); ?>>Yoruba</option>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="branch_description">Branch Description</label></th>
+                        <td>
+                            <textarea name="branch_description" id="branch_description" class="large-text" rows="3" placeholder="Brief description shown under branch name in header"><?php echo isset($meta['branch_description']) ? esc_textarea($meta['branch_description']) : ''; ?></textarea>
+                            <p class="description">Brief description shown under the branch name in the header section.</p>
                         </td>
                     </tr>
                     <tr>
@@ -283,6 +291,7 @@ class Church_Branches_Generator_Admin {
         $language      = sanitize_text_field($_POST['language']);
         $about_us_text = isset($_POST['about_us_text']) ? wp_kses_post($_POST['about_us_text']) : '';
         $directions_info = isset($_POST['directions_info']) ? wp_kses_post($_POST['directions_info']) : '';
+        $branch_description = isset($_POST['branch_description']) ? sanitize_text_field($_POST['branch_description']) : '';
         $attachment_id = intval($_POST['branch_image_id'] ?? 0);
 
         // Check if branch already exists (for new branches)
@@ -309,15 +318,16 @@ class Church_Branches_Generator_Admin {
             $branch_data = $this->branch_handler->get_branch_by_page_id($edit_id);
             if ($branch_data) {
                 $result = $this->branch_handler->update_branch($branch_data['id'], array(
-                    'branch_name'   => $branch_name,
-                    'address'       => $address,
-                    'phone'         => $phone,
-                    'email'         => $email,
-                    'service_times' => $service_times,
-                    'lead_pastor'   => $lead_pastor,
-                    'about_us_text' => $about_us_text,
-                    'directions_info' => $directions_info,
-                    'language'      => $language,
+                    'branch_name'         => $branch_name,
+                    'address'             => $address,
+                    'phone'               => $phone,
+                    'email'               => $email,
+                    'service_times'       => $service_times,
+                    'lead_pastor'         => $lead_pastor,
+                    'about_us_text'       => $about_us_text,
+                    'directions_info'     => $directions_info,
+                    'language'            => $language,
+                    'branch_description'  => $branch_description,
                 ));
 
                 if (is_wp_error($result)) {
@@ -357,16 +367,17 @@ class Church_Branches_Generator_Admin {
 
             // Create branch data in database
             $branch_id = $this->branch_handler->create_branch(array(
-                'branch_name'     => $branch_name,
-                'address'         => $address,
-                'phone'           => $phone,
-                'email'           => $email,
-                'service_times'   => $service_times,
-                'lead_pastor'     => $lead_pastor,
-                'page_id'         => $page_id,
-                'about_us_text'   => $about_us_text,
-                'directions_info' => $directions_info,
-                'language'        => $language,
+                'branch_name'         => $branch_name,
+                'address'             => $address,
+                'phone'               => $phone,
+                'email'               => $email,
+                'service_times'       => $service_times,
+                'lead_pastor'         => $lead_pastor,
+                'page_id'             => $page_id,
+                'about_us_text'       => $about_us_text,
+                'directions_info'     => $directions_info,
+                'language'            => $language,
+                'branch_description'  => $branch_description,
             ));
 
             if (is_wp_error($branch_id)) {
@@ -874,9 +885,9 @@ class Church_Branches_Generator_Admin {
             $this->process_settings_form();
         }
 
-        $primary_color = get_option('cbg_primary_color', '#0073aa');
-        $secondary_color = get_option('cbg_secondary_color', '#005a87');
-        $font_family = get_option('cbg_font_family', 'Arial, sans-serif');
+        $primary_color = get_option('cbg_primary_color', '#d4a625');
+        $secondary_color = get_option('cbg_secondary_color', '#7b1f1f');
+        $font_family = get_option('cbg_font_family', 'Inter, sans-serif');
 
         $menus = wp_get_nav_menus(array('orderby' => 'name'));
         
@@ -917,15 +928,56 @@ class Church_Branches_Generator_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="font_family">Font Family</label></th>
+                    <tr>
+                        <th scope="row"><label for="title_font_family">Title Font</label></th>
                         <td>
-                            <select name="font_family" id="font_family">
-                                <option value="Arial, sans-serif" <?php selected($font_family, 'Arial, sans-serif'); ?>>Arial</option>
-                                <option value="Georgia, serif" <?php selected($font_family, 'Georgia, serif'); ?>>Georgia</option>
-                                <option value="'Trebuchet MS', sans-serif" <?php selected($font_family, "'Trebuchet MS', sans-serif"); ?>>Trebuchet MS</option>
-                                <option value="'Times New Roman', serif" <?php selected($font_family, "'Times New Roman', serif"); ?>>Times New Roman</option>
-                                <option value="'Courier New', monospace" <?php selected($font_family, "'Courier New', monospace"); ?>>Courier New</option>
+                            <select name="title_font_family" id="title_font_family" style="margin-right: 10px;">
+                                <option value="Inter, sans-serif" <?php selected(get_option('cbg_title_font_family', 'Inter, sans-serif'), 'Inter, sans-serif'); ?>>Inter</option>
+                                <option value="Arial, sans-serif" <?php selected(get_option('cbg_title_font_family', 'Inter, sans-serif'), 'Arial, sans-serif'); ?>>Arial</option>
+                                <option value="Georgia, serif" <?php selected(get_option('cbg_title_font_family', 'Inter, sans-serif'), 'Georgia, serif'); ?>>Georgia</option>
+                                <option value="'Trebuchet MS', sans-serif" <?php selected(get_option('cbg_title_font_family', 'Inter, sans-serif'), "'Trebuchet MS', sans-serif"); ?>>Trebuchet MS</option>
+                                <option value="'Times New Roman', serif" <?php selected(get_option('cbg_title_font_family', 'Inter, sans-serif'), "'Times New Roman', serif"); ?>>Times New Roman</option>
                             </select>
+                            <select name="title_font_weight" id="title_font_weight">
+                                <option value="400" <?php selected(get_option('cbg_title_font_weight', '700'), '400'); ?>>Regular (400)</option>
+                                <option value="500" <?php selected(get_option('cbg_title_font_weight', '700'), '500'); ?>>Medium (500)</option>
+                                <option value="600" <?php selected(get_option('cbg_title_font_weight', '700'), '600'); ?>>Semibold (600)</option>
+                                <option value="700" <?php selected(get_option('cbg_title_font_weight', '700'), '700'); ?>>Bold (700)</option>
+                            </select>
+                            <p class="description">Font for headings and titles.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="body_font_family">Body Font</label></th>
+                        <td>
+                            <select name="body_font_family" id="body_font_family" style="margin-right: 10px;">
+                                <option value="Inter, sans-serif" <?php selected(get_option('cbg_body_font_family', 'Inter, sans-serif'), 'Inter, sans-serif'); ?>>Inter</option>
+                                <option value="Arial, sans-serif" <?php selected(get_option('cbg_body_font_family', 'Inter, sans-serif'), 'Arial, sans-serif'); ?>>Arial</option>
+                                <option value="Georgia, serif" <?php selected(get_option('cbg_body_font_family', 'Inter, sans-serif'), 'Georgia, serif'); ?>>Georgia</option>
+                                <option value="'Trebuchet MS', sans-serif" <?php selected(get_option('cbg_body_font_family', 'Inter, sans-serif'), "'Trebuchet MS', sans-serif"); ?>>Trebuchet MS</option>
+                                <option value="'Times New Roman', serif" <?php selected(get_option('cbg_body_font_family', 'Inter, sans-serif'), "'Times New Roman', serif"); ?>>Times New Roman</option>
+                            </select>
+                            <select name="body_font_weight" id="body_font_weight">
+                                <option value="300" <?php selected(get_option('cbg_body_font_weight', '400'), '300'); ?>>Light (300)</option>
+                                <option value="400" <?php selected(get_option('cbg_body_font_weight', '400'), '400'); ?>>Regular (400)</option>
+                                <option value="500" <?php selected(get_option('cbg_body_font_weight', '400'), '500'); ?>>Medium (500)</option>
+                                <option value="600" <?php selected(get_option('cbg_body_font_weight', '400'), '600'); ?>>Semibold (600)</option>
+                            </select>
+                            <p class="description">Font for body text.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="view_all_churches_url">"View All Churches" URL</label></th>
+                        <td>
+                            <input name="view_all_churches_url" id="view_all_churches_url" type="text" value="<?php echo esc_attr(get_option('cbg_view_all_churches_url', '/churches')); ?>" class="regular-text" placeholder="/churches">
+                            <p class="description">The URL for the "View All Churches" button in the CTA section.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="default_branch_description">Default Branch Description</label></th>
+                        <td>
+                            <textarea name="default_branch_description" id="default_branch_description" class="large-text" rows="3" placeholder="The church is a vibrant community of believers..."><?php echo esc_textarea(get_option('cbg_default_branch_description', 'The church is a vibrant community of believers committed to spreading the gospel and serving the community with love and compassion.')); ?></textarea>
+                            <p class="description">Default description shown in the branch header when no specific description is set. Use <code>{branch_name}</code> to insert the branch name dynamically.</p>
                         </td>
                     </tr>
                 </table>
@@ -1068,9 +1120,14 @@ class Church_Branches_Generator_Admin {
     }
 
     private function process_settings_form() {
-        update_option('cbg_primary_color', sanitize_hex_color($_POST['primary_color'] ?? '#0073aa'));
-        update_option('cbg_secondary_color', sanitize_hex_color($_POST['secondary_color'] ?? '#005a87'));
-        update_option('cbg_font_family', sanitize_text_field($_POST['font_family'] ?? 'Arial, sans-serif'));
+        update_option('cbg_primary_color', sanitize_hex_color($_POST['primary_color'] ?? '#d4a625'));
+        update_option('cbg_secondary_color', sanitize_hex_color($_POST['secondary_color'] ?? '#7b1f1f'));
+        update_option('cbg_title_font_family', sanitize_text_field($_POST['title_font_family'] ?? 'Inter, sans-serif'));
+        update_option('cbg_title_font_weight', sanitize_text_field($_POST['title_font_weight'] ?? '700'));
+        update_option('cbg_body_font_family', sanitize_text_field($_POST['body_font_family'] ?? 'Inter, sans-serif'));
+        update_option('cbg_body_font_weight', sanitize_text_field($_POST['body_font_weight'] ?? '400'));
+        update_option('cbg_view_all_churches_url', esc_url_raw($_POST['view_all_churches_url'] ?? '/churches'));
+        update_option('cbg_default_branch_description', sanitize_text_field($_POST['default_branch_description'] ?? 'The church is a vibrant community of believers committed to spreading the gospel and serving the community with love and compassion.'));
         
         $languages = array('english', 'yoruba');
         foreach ($languages as $lang) {

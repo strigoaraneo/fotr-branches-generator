@@ -10,18 +10,19 @@
 :root {
   --text-color: #0b0f17;
   --muted-color: #4c5b6d;
+  --secondary-text-color: #484847;
   --bg: #f7f8fb;
   --card: #ffffff;
-  --primary: #d4a625;
-  --accent: #7b1f1f;
+  --primary: var(--cbg-primary, #d4a625);
+  --accent: var(--cbg-secondary, #7b1f1f);
   --radius: 14px;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --font-primary: "Inter", sans-serif;
-  --font-secondary: "Roboto", sans-serif;
+  --font-title: var(--cbg-title-font, "Inter", sans-serif);
+  --font-body: var(--cbg-body-font, "Inter", sans-serif);
 }
 
 body {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   overflow-x: hidden;
   background: #ffffff;
 }
@@ -100,7 +101,7 @@ body {
   margin: 0 0 1rem 0;
   line-height: 1.2;
   font-weight: 700;
-  font-family: var(--font-primary);
+  font-family: var(--font-title);
   color: var(--text-color);
   text-align: left;
 }
@@ -112,7 +113,7 @@ body {
   color: var(--muted-color);
   line-height: 1.6;
   font-weight: 400;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   text-align: left;
 }
 
@@ -138,7 +139,7 @@ body {
   border: none;
   display: flex;
   flex-direction: column;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   gap: 1.5rem;
 }
 
@@ -177,6 +178,7 @@ body {
   margin: 0 0 1rem 0;
   font-weight: 700;
   color: var(--text-color);
+  font-family: var(--font-title);
 }
 
 .info-list {
@@ -257,27 +259,27 @@ body {
   margin: 0 0 0.8rem 0;
   font-size: 1.6rem;
   font-weight: 400;
-  font-family: var(--font-secondary);
+  font-family: var(--font-title);
 }
 
 .service-row {
-  margin-top: 0.65rem;
+  margin-top: 0.6rem;
 }
 
 .service-row h4 {
-  margin: 0.15rem 0;
+  margin: 0 0 0.5rem 0 !important;
   font-size: 1.4rem;
   font-weight: 400;
   color: #fff;
-  font-family: var(--font-secondary);
+  font-family: var(--font-title);
 }
 
 .service-row p {
-  margin: 0;
+  margin: 0 0 0.5rem 0 !important;
   color: #f5e8e8;
   font-size: 1rem;
   font-weight: 400;
-  font-family: var(--font-secondary);
+  font-family: var(--font-body);
 }
 
 .service-day-time {
@@ -295,7 +297,7 @@ body {
   padding: 7rem 0;
   margin: 1rem 0 0 0;
   border: none;
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
 
   display: flex;
   flex-direction: column;
@@ -397,6 +399,11 @@ body {
   }
 
   .branch-card {
+    padding: 1.25rem;
+    gap: 1.5rem;
+  }
+  .branch-card p {
+    color: var(--secondary-text-color);
     padding: 1.25rem;
     gap: 1.5rem;
   }
@@ -519,7 +526,7 @@ body {
 }
 
 .directions-popup-content h2 {
-  font-family: "Inter", Sans-serif;
+  font-family: var(--font-title);
   margin: 0 0 1.5rem 0;
   font-size: 2rem;
   font-weight: 700;

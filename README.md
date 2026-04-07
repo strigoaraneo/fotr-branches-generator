@@ -8,8 +8,8 @@ This plugin enables administrators to manage church branches and their associate
 - **Create Branch Page** with WYSIWYG editors for rich text content
 - **Edit Branch** functionality with ability to update all fields
 - **All Branches Table** view with management actions
-- **Services Management** per branch with add/delete functionality
-- **Programs Management** per branch with add/delete functionality
+- **Services Management** per branch with add/edit/delete functionality
+- **Programs Management** per branch with add/edit/delete functionality
 - **Settings Page** to customize brand colors and typography
 
 ### Scalability
@@ -53,14 +53,14 @@ Once activated, you'll see a new **"Church Branches"** menu in the WordPress Adm
 ### 4. **Services**
 
 - Select a branch from the dropdown
-- Add services (Sunday Service, Prayer Meeting, etc.)
+- Add or edit services (Sunday Service, Prayer Meeting, etc.)
 - Specify day of week and time
 - Delete services individually
 
 ### 5. **Programs**
 
 - Select a branch from the dropdown
-- Add programs (Bible Study, Youth Group, etc.)
+- Add or edit programs (Bible Study, Youth Group, etc.)
 - Choose program type (Weekly, Monthly, Special Event)
 - Specify day, time, and location
 - Delete programs individually
@@ -68,8 +68,11 @@ Once activated, you'll see a new **"Church Branches"** menu in the WordPress Adm
 ### 6. **Settings**
 
 - Customize primary color (for buttons)
-- Customize secondary color
-- Choose font family
+- Customize secondary color (for container background)
+- Choose font family and font weights for Title and Body text.
+- Choose a default URL for the "View All Churches" button.
+- Choose a default Branch Description which is used if the branch description is left empty while branch creation.
+- Menu settings by language: Choose the menu where the church pages should be added. Users can choose separate menus for different languages.
 - Settings apply site-wide
 
 ## Frontend Display

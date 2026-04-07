@@ -29,10 +29,35 @@ class Church_Branches_Generator_Shortcodes {
         global $wpdb;
         $prefix = $wpdb->prefix . CHURCH_BRANCHES_GENERATOR_TABLE_PREFIX;
 
+        $primary_color = get_option('cbg_primary_color', '#d4a625');
+        $secondary_color = get_option('cbg_secondary_color', '#7b1f1f');
+        $title_font = get_option('cbg_title_font_family', 'Inter, sans-serif');
+        $title_weight = get_option('cbg_title_font_weight', '700');
+        $body_font = get_option('cbg_body_font_family', 'Inter, sans-serif');
+        $body_weight = get_option('cbg_body_font_weight', '400');
+        $view_all_churches_url = get_option('cbg_view_all_churches_url', '/churches');
+        $default_branch_description = get_option('cbg_default_branch_description', 'The church is a vibrant community of believers committed to spreading the gospel and serving the community with love and compassion.');
+
+        $dynamic_css = '<style id="cbg-dynamic-styles">';
+        $dynamic_css .= ':root { --cbg-primary: ' . esc_attr($primary_color) . '; --cbg-secondary: ' . esc_attr($secondary_color) . '; --cbg-title-font: ' . esc_attr($title_font) . '; --cbg-body-font: ' . esc_attr($body_font) . '; }';
+        $dynamic_css .= '.services-card { background: ' . esc_attr($secondary_color) . '; }';
+        $dynamic_css .= '.btn-primary, .get-directions-btn .btn { background: ' . esc_attr($primary_color) . ' !important; }';
+        $dynamic_css .= '.btn-primary:hover { filter: brightness(0.9); }';
+        $dynamic_css .= '.btn-outline { border-color: ' . esc_attr($primary_color) . '; color: ' . esc_attr($primary_color) . '; }';
+        $dynamic_css .= '.branch-page-wrapper { font-family: ' . esc_attr($body_font) . '; font-weight: ' . esc_attr($body_weight) . '; }';
+        $dynamic_css .= '.branch-header h1, .section-title, .branch-card h2, .cta-section h2 { font-family: ' . esc_attr($title_font) . '; font-weight: ' . esc_attr($title_weight) . '; }';
+        $dynamic_css .= '.services-card h3 { font-family: ' . esc_attr($title_font) . '; font-weight: ' . esc_attr($title_weight) . '; }';
+        $dynamic_css .= '.service-row h4 { font-family: ' . esc_attr($title_font) . '; font-weight: ' . esc_attr($title_weight) . '; }';
+        $dynamic_css .= '</style>';
+
         $location_img = CHURCH_BRANCHES_GENERATOR_PLUGIN_URL . 'public/images/ion_location-outline.png';
         $phone_img = CHURCH_BRANCHES_GENERATOR_PLUGIN_URL . 'public/images/mingcute_phone-fill.png';
 
         $branch_name = esc_html($branch['branch_name']);
+        $default_desc = str_replace('{branch_name}', $branch_name, $default_branch_description);
+        $branch_description = !empty($branch['branch_description']) 
+            ? esc_html($branch['branch_description']) 
+            : $default_desc;
         $address = esc_html($branch['address']);
         $phone = esc_html($branch['phone']);
         $email = esc_html($branch['email']);
@@ -169,7 +194,8 @@ class Church_Branches_Generator_Shortcodes {
 
         $hero_bg_style = "background: url('{$hero_img_url}') no-repeat center/cover;";
 
-        $html = <<<HTML
+        $html = $dynamic_css;
+        $html .= <<<HTML
 <main class="branch-page-wrapper">
     <section class="branch-hero" role="banner" style="{$hero_bg_style}">
     </section>
@@ -177,11 +203,7 @@ class Church_Branches_Generator_Shortcodes {
     <section class="branch-header">
         <div class="branch-header-content">
             <h1>{$branch_name} State Branch</h1>
-            <p>
-                The {$branch_name} State branch is a vibrant community of believers
-                committed to spreading the gospel and serving the community with
-                love and compassion.
-            </p>
+            <p>{$branch_description}</p>
         </div>
     </section>
 
@@ -235,7 +257,7 @@ class Church_Branches_Generator_Shortcodes {
 
             <article class="branch-card" aria-label="About and Services">
                 <h2 class="section-title">About Our Branch</h2>
-                {$about_us_text}
+                <p>{$about_us_text}</p>
 
                 <div class="services-card">
                     <h3>Weekly Services &amp; Activities</h3>
@@ -254,7 +276,7 @@ class Church_Branches_Generator_Shortcodes {
         <h2>Visit Us This Sunday</h2>
         <p>We can't wait to welcome you into our church family!</p>
         <div class="cta-buttons">
-            <a href="#" class="btn btn-primary">View all Churches</a>
+            <a href="{$view_all_churches_url}" class="btn btn-primary">View all Churches</a>
             <a href="#" class="btn btn-outline" onclick="document.getElementById('branch-directions-popup').style.display='block'; return false;">Get Directions</a>
         </div>
     </section>
