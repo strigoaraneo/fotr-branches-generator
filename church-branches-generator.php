@@ -32,18 +32,21 @@
   }
   register_deactivation_hook(__FILE__, 'deactivate_church_branches_generator');
   
-  
-   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
-   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-branch-handler.php';
-   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-program-handler.php';
-   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-service-handler.php';
-   require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-shortcodes.php';
-   
-   function run_church_branches_generator() {
-       $plugin = new Church_Branches_Generator_Plugin();
-       $plugin->run();
-   }
-   run_church_branches_generator();
+    
+    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-plugin.php';
+    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-branch-handler.php';
+    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-program-handler.php';
+    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-service-handler.php';
+    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-shortcodes.php';
+    require CHURCH_BRANCHES_GENERATOR_PLUGIN_DIR . 'includes/class-menu-handler.php';
+    
+    function run_church_branches_generator() {
+        $plugin = new Church_Branches_Generator_Plugin();
+        $plugin->run();
+        
+        new Church_Branches_Generator_Menu();
+    }
+    run_church_branches_generator();
   
   class Branch_Creator {
 
@@ -355,6 +358,8 @@ HTML;
         echo '<div class="notice notice-success is-dismissible">';
         echo "<p>Branch created successfully! <a href='{$link}' target='_blank'>View Page</a></p>";
         echo '</div>';
+        
+        do_action('church_branch_created', $branch_id, $page_id);
     }
 }
 

@@ -23,6 +23,7 @@ class Church_Branches_Generator_Admin {
         add_action('wp_ajax_cbg_delete_branch', array($this, 'ajax_delete_branch'));
         add_action('wp_ajax_cbg_delete_service', array($this, 'ajax_delete_service'));
         add_action('wp_ajax_cbg_delete_program', array($this, 'ajax_delete_program'));
+        add_action('wp_ajax_cbg_get_menu_items', array($this, 'ajax_get_menu_items'));
     }
 
     public function enqueue_styles($hook) {
@@ -250,6 +251,89 @@ class Church_Branches_Generator_Admin {
                     </tr>
                 </table>
 
+                <?php if (!$edit_id): ?>
+                <?php 
+                $menus = wp_get_nav_menus(array('orderby' => 'name'));
+                $selected_menu_id = get_option('cbg_selected_menu_id', 0);
+                $churches_menu_item_id = get_option('cbg_churches_menu_item_id', 0);
+                ?>
+                <h3>Navigation Menu</h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="add_to_menu">Add to Menu</label></th>
+                        <td>
+                            <label for="add_to_menu">
+                                <input type="checkbox" name="add_to_menu" id="add_to_menu" value="1" checked>
+                                Add branch to navigation menu
+                            </label>
+                            <p class="description">When enabled, this branch will be added to the selected menu under "Churches".</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="selected_menu_id">Select Menu</label></th>
+                        <td>
+                            <select name="selected_menu_id" id="selected_menu_id">
+                                <option value="0">-- Select a Menu --</option>
+                                <?php foreach ($menus as $menu): ?>
+                                    <option value="<?php echo esc_attr($menu->term_id); ?>" <?php selected($selected_menu_id, $menu->term_id); ?>>
+                                        <?php echo esc_html($menu->name); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">Choose which menu to add branches to.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="churches_menu_item_id">"Churches" Menu Item</label></th>
+                        <td>
+                            <select name="churches_menu_item_id" id="churches_menu_item_id">
+                                <option value="0">-- Select --</option>
+                                <?php
+                                if ($selected_menu_id > 0) {
+                                    $menu_items = wp_get_nav_menu_items($selected_menu_id);
+                                    if ($menu_items) {
+                                        foreach ($menu_items as $item) {
+                                            if ($item->menu_item_parent == 0) {
+                                                echo '<option value="' . esc_attr($item->db_id) . '" ' . selected($churches_menu_item_id, $item->db_id, false) . '>' . esc_html($item->title) . ' (ID: ' . $item->db_id . ')</option>';
+                                            }
+                                        }
+                                    }
+                                }
+                                ?>
+                            </select>
+                            <p class="description">Select the top-level "Churches" menu item. You must create this in <a href="<?php echo admin_url('nav-menus.php'); ?>" target="_blank">Appearance → Menus</a> first.</p>
+                        </td>
+                    </tr>
+                </table>
+                <script>
+                    jQuery(document).ready(function($) {
+                        $('#selected_menu_id').on('change', function() {
+                            var menu_id = $(this).val();
+                            var $churchesSelect = $('#churches_menu_item_id');
+                            
+                            if (menu_id > 0) {
+                                $.ajax({
+                                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                                    type: 'POST',
+                                    data: {
+                                        action: 'cbg_get_menu_items',
+                                        menu_id: menu_id,
+                                        nonce: '<?php echo wp_create_nonce('cbg-menu-nonce'); ?>'
+                                    },
+                                    success: function(response) {
+                                        if (response.success) {
+                                            $churchesSelect.html('<option value="0">-- Select --</option>' + response.data);
+                                        }
+                                    }
+                                });
+                            } else {
+                                $churchesSelect.html('<option value="0">-- Select --</option>');
+                            }
+                        });
+                    });
+                </script>
+                <?php endif; ?>
+
                 <?php submit_button($edit_id ? 'Update Branch' : 'Create Branch', 'primary', 'cbg_submit_branch'); ?>
             </form>
         </div>
@@ -362,9 +446,70 @@ class Church_Branches_Generator_Admin {
                 'post_content' => '[church_branch id="' . $branch_id . '"]',
             ));
 
+            $add_to_menu = isset($_POST['add_to_menu']) && $_POST['add_to_menu'] == '1';
+            $menu_notice = '';
+            
+            if ($add_to_menu) {
+                $form_selected_menu_id = intval($_POST['selected_menu_id'] ?? 0);
+                $form_churches_menu_item_id = intval($_POST['churches_menu_item_id'] ?? 0);
+                $menu_notice = $this->add_branch_to_menu($branch_id, $branch_name, $page_id, $form_selected_menu_id, $form_churches_menu_item_id);
+            }
+
             $link = get_permalink($page_id);
-            echo '<div class="notice notice-success is-dismissible"><p>Branch created successfully! <a href="' . esc_url($link) . '" target="_blank">View Page</a></p></div>';
+            echo '<div class="notice notice-success is-dismissible"><p>Branch created successfully! ' . $menu_notice . ' <a href="' . esc_url($link) . '" target="_blank">View Page</a></p></div>';
         }
+    }
+    
+    private function add_branch_to_menu($branch_id, $branch_name, $page_id, $selected_menu_id, $churches_menu_item_id) {
+        if ($selected_menu_id <= 0 || $churches_menu_item_id <= 0) {
+            return '<em>(Menu not selected)</em>';
+        }
+        
+        $menu_exists = wp_get_nav_menu_object($selected_menu_id);
+        if (!$menu_exists) {
+            return '<em>(Menu not found)</em>';
+        }
+        
+        $menu_items = wp_get_nav_menu_items($selected_menu_id);
+        $churches_item_found = false;
+        foreach ($menu_items as $item) {
+            if (intval($item->db_id) === $churches_menu_item_id) {
+                $churches_item_found = true;
+                break;
+            }
+        }
+        
+        if (!$churches_item_found) {
+            return '<em>(Churches menu item not found)</em>';
+        }
+        
+        $branch_url = get_permalink($page_id);
+        if (empty($branch_url) || $branch_url === home_url('/')) {
+            return '<em>(Invalid page URL)</em>';
+        }
+        
+        foreach ($menu_items as $item) {
+            if ($item->url === $branch_url) {
+                return '<em>(Already in menu)</em>';
+            }
+        }
+        
+        $item_id = wp_update_nav_menu_item($selected_menu_id, 0, array(
+            'menu-item-object-id' => $branch_id,
+            'menu-item-object' => 'custom',
+            'menu-item-type' => 'custom',
+            'menu-item-title' => $branch_name . ' Branch',
+            'menu-item-url' => $branch_url,
+            'menu-item-status' => 'publish',
+            'menu-item-parent-id' => $churches_menu_item_id,
+            'menu-item-classes' => 'cbg-branch-item',
+        ));
+        
+        if (!is_wp_error($item_id) && $item_id > 0) {
+            return '<em>(Added to menu)</em>';
+        }
+        
+        return '<em>(Could not add to menu)</em>';
     }
 
     public function render_branches_list() {
@@ -704,6 +849,7 @@ class Church_Branches_Generator_Admin {
             <form method="post" class="cbg-settings-form">
                 <?php wp_nonce_field('cbg_save_settings_nonce', 'cbg_settings_nonce'); ?>
                 
+                <h2>Appearance</h2>
                 <table class="form-table">
                     <tr>
                         <th scope="row"><label for="primary_color">Primary Color</label></th>
@@ -745,6 +891,32 @@ class Church_Branches_Generator_Admin {
         update_option('cbg_font_family', sanitize_text_field($_POST['font_family'] ?? 'Arial, sans-serif'));
         
         echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully!</p></div>';
+    }
+
+    public function ajax_get_menu_items() {
+        check_ajax_referer('cbg-menu-nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+        
+        $menu_id = intval($_POST['menu_id']);
+        if ($menu_id <= 0) {
+            wp_send_json_error('Invalid menu ID');
+        }
+        
+        $menu_items = wp_get_nav_menu_items($menu_id);
+        $options = '';
+        
+        if ($menu_items) {
+            foreach ($menu_items as $item) {
+                if ($item->menu_item_parent == 0) {
+                    $options .= '<option value="' . esc_attr($item->db_id) . '">' . esc_html($item->title) . ' (ID: ' . $item->db_id . ')</option>';
+                }
+            }
+        }
+        
+        wp_send_json_success($options);
     }
 
     public function ajax_delete_branch() {
