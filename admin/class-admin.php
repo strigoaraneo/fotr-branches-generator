@@ -24,6 +24,8 @@ class Church_Branches_Generator_Admin {
         add_action('wp_ajax_cbg_delete_service', array($this, 'ajax_delete_service'));
         add_action('wp_ajax_cbg_delete_program', array($this, 'ajax_delete_program'));
         add_action('wp_ajax_cbg_get_menu_items', array($this, 'ajax_get_menu_items'));
+        add_action('wp_ajax_cbg_get_service', array($this, 'ajax_get_service'));
+        add_action('wp_ajax_cbg_get_program', array($this, 'ajax_get_program'));
     }
 
     public function enqueue_styles($hook) {
@@ -553,6 +555,9 @@ class Church_Branches_Generator_Admin {
 
         $services = $branch_id ? $this->service_handler->get_services_by_branch($branch_id) : array();
 
+        $edit_service_id = isset($_GET['edit_service']) ? intval($_GET['edit_service']) : 0;
+        $edit_service = $edit_service_id ? $this->service_handler->get_service($edit_service_id) : null;
+
         if (isset($_POST['cbg_save_service']) && wp_verify_nonce($_POST['cbg_nonce'], 'cbg_save_service_nonce')) {
             $this->process_service_form($branch_id);
         }
@@ -571,40 +576,45 @@ class Church_Branches_Generator_Admin {
             </div>
 
             <?php if ($branch_id): ?>
-                <form method="post" class="cbg-service-form" style="background: #f1f1f1; padding: 20px; margin-bottom: 30px; border-radius: 5px;">
+                <form method="post" class="cbg-service-form" id="cbg-service-form" style="background: #f1f1f1; padding: 20px; margin-bottom: 30px; border-radius: 5px;">
                     <?php wp_nonce_field('cbg_save_service_nonce', 'cbg_nonce'); ?>
                     <input type="hidden" name="branch_id" value="<?php echo intval($branch_id); ?>">
+                    <input type="hidden" name="edit_service_id" id="edit_service_id" value="<?php echo intval($edit_service_id); ?>">
                     
+                    <h2 id="service-form-title"><?php echo $edit_service ? 'Edit Service' : 'Add Service'; ?></h2>
                     <table class="form-table">
                         <tr>
                             <th scope="row"><label for="service_name">Service Name</label></th>
-                            <td><input name="service_name" id="service_name" type="text" class="regular-text" placeholder="e.g. Sunday Service" required></td>
+                            <td><input name="service_name" id="service_name" type="text" class="regular-text" placeholder="e.g. Sunday Service" required value="<?php echo $edit_service ? esc_attr($edit_service['service_name']) : ''; ?>"></td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="service_desc">Description</label></th>
-                            <td><textarea name="service_desc" id="service_desc" class="large-text" placeholder="Service details"></textarea></td>
+                            <td><textarea name="service_desc" id="service_desc" class="large-text" placeholder="Service details"><?php echo $edit_service ? esc_textarea($edit_service['description']) : ''; ?></textarea></td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="service_day">Day of Week</label></th>
                             <td>
                                 <select name="service_day" id="service_day">
                                     <option value="">Select a day</option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
-                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Monday'); ?>>Monday</option>
+                                    <option value="Tuesday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Tuesday'); ?>>Tuesday</option>
+                                    <option value="Wednesday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Wednesday'); ?>>Wednesday</option>
+                                    <option value="Thursday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Thursday'); ?>>Thursday</option>
+                                    <option value="Friday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Friday'); ?>>Friday</option>
+                                    <option value="Saturday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Saturday'); ?>>Saturday</option>
+                                    <option value="Sunday" <?php selected($edit_service ? $edit_service['day_of_week'] : '', 'Sunday'); ?>>Sunday</option>
                                 </select>
                             </td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="service_time">Time</label></th>
-                            <td><input name="service_time" id="service_time" type="text" class="regular-text" placeholder="e.g. 9:00 AM"></td>
+                            <td><input name="service_time" id="service_time" type="text" class="regular-text" placeholder="e.g. 9:00 AM" value="<?php echo $edit_service ? esc_attr($edit_service['time']) : ''; ?>"></td>
                         </tr>
                     </table>
-                    <?php submit_button('Add Service', 'primary', 'cbg_save_service'); ?>
+                    <?php submit_button($edit_service ? 'Update Service' : 'Add Service', 'primary', 'cbg_save_service'); ?>
+                    <?php if ($edit_service): ?>
+                        <a href="?page=church-branches-services&branch_id=<?php echo intval($branch_id); ?>" class="button">Cancel Edit</a>
+                    <?php endif; ?>
                 </form>
 
                 <h2>Services for this Branch</h2>
@@ -627,6 +637,7 @@ class Church_Branches_Generator_Admin {
                                     <td><?php echo esc_html($service['day_of_week']); ?></td>
                                     <td><?php echo esc_html($service['time']); ?></td>
                                     <td>
+                                        <a href="?page=church-branches-services&branch_id=<?php echo intval($branch_id); ?>&edit_service=<?php echo intval($service['id']); ?>" class="button button-small">Edit</a>
                                         <button class="button button-small button-link-delete cbg-delete-service" data-service-id="<?php echo intval($service['id']); ?>" data-branch-id="<?php echo intval($branch_id); ?>">Delete</button>
                                     </td>
                                 </tr>
@@ -644,23 +655,39 @@ class Church_Branches_Generator_Admin {
     }
 
     private function process_service_form($branch_id) {
+        $edit_id = intval($_POST['edit_service_id'] ?? 0);
         $service_name = sanitize_text_field($_POST['service_name']);
         $service_desc = wp_kses_post($_POST['service_desc'] ?? '');
         $service_day = sanitize_text_field($_POST['service_day'] ?? '');
         $service_time = sanitize_text_field($_POST['service_time'] ?? '');
 
-        $result = $this->service_handler->create_service(array(
-            'branch_id'    => $branch_id,
-            'service_name' => $service_name,
-            'description'  => $service_desc,
-            'day_of_week'  => $service_day,
-            'time'         => $service_time,
-        ));
+        if ($edit_id > 0) {
+            $result = $this->service_handler->update_service($edit_id, array(
+                'service_name' => $service_name,
+                'description'  => $service_desc,
+                'day_of_week'  => $service_day,
+                'time'         => $service_time,
+            ));
 
-        if (is_wp_error($result)) {
-            echo '<div class="notice notice-error"><p>Error creating service.</p></div>';
+            if (is_wp_error($result)) {
+                echo '<div class="notice notice-error"><p>Error updating service.</p></div>';
+            } else {
+                echo '<div class="notice notice-success is-dismissible"><p>Service updated successfully!</p></div>';
+            }
         } else {
-            echo '<div class="notice notice-success is-dismissible"><p>Service added successfully!</p></div>';
+            $result = $this->service_handler->create_service(array(
+                'branch_id'    => $branch_id,
+                'service_name' => $service_name,
+                'description'  => $service_desc,
+                'day_of_week'  => $service_day,
+                'time'         => $service_time,
+            ));
+
+            if (is_wp_error($result)) {
+                echo '<div class="notice notice-error"><p>Error creating service.</p></div>';
+            } else {
+                echo '<div class="notice notice-success is-dismissible"><p>Service added successfully!</p></div>';
+            }
         }
     }
 
@@ -677,6 +704,9 @@ class Church_Branches_Generator_Admin {
         }
 
         $programs = $branch_id ? $this->program_handler->get_programs_by_branch($branch_id) : array();
+
+        $edit_program_id = isset($_GET['edit_program']) ? intval($_GET['edit_program']) : 0;
+        $edit_program = $edit_program_id ? $this->program_handler->get_program($edit_program_id) : null;
 
         if (isset($_POST['cbg_save_program']) && wp_verify_nonce($_POST['cbg_nonce'], 'cbg_save_program_nonce')) {
             $this->process_program_form($branch_id);
@@ -696,26 +726,28 @@ class Church_Branches_Generator_Admin {
             </div>
 
             <?php if ($branch_id): ?>
-                <form method="post" class="cbg-program-form" style="background: #f1f1f1; padding: 20px; margin-bottom: 30px; border-radius: 5px;">
+                <form method="post" class="cbg-program-form" id="cbg-program-form" style="background: #f1f1f1; padding: 20px; margin-bottom: 30px; border-radius: 5px;">
                     <?php wp_nonce_field('cbg_save_program_nonce', 'cbg_nonce'); ?>
                     <input type="hidden" name="branch_id" value="<?php echo intval($branch_id); ?>">
+                    <input type="hidden" name="edit_program_id" id="edit_program_id" value="<?php echo intval($edit_program_id); ?>">
                     
+                    <h2 id="program-form-title"><?php echo $edit_program ? 'Edit Program' : 'Add Program'; ?></h2>
                     <table class="form-table">
                         <tr>
                             <th scope="row"><label for="program_name">Program Name</label></th>
-                            <td><input name="program_name" id="program_name" type="text" class="regular-text" placeholder="e.g. Bible Study" required></td>
+                            <td><input name="program_name" id="program_name" type="text" class="regular-text" placeholder="e.g. Bible Study" required value="<?php echo $edit_program ? esc_attr($edit_program['program_name']) : ''; ?>"></td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="program_desc">Description</label></th>
-                            <td><textarea name="program_desc" id="program_desc" class="large-text" placeholder="Program details"></textarea></td>
+                            <td><textarea name="program_desc" id="program_desc" class="large-text" placeholder="Program details"><?php echo $edit_program ? esc_textarea($edit_program['description']) : ''; ?></textarea></td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="program_type">Type</label></th>
                             <td>
                                 <select name="program_type" id="program_type">
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="special">Special Event</option>
+                                    <option value="weekly" <?php selected($edit_program ? $edit_program['program_type'] : '', 'weekly'); ?>>Weekly</option>
+                                    <option value="monthly" <?php selected($edit_program ? $edit_program['program_type'] : '', 'monthly'); ?>>Monthly</option>
+                                    <option value="special" <?php selected($edit_program ? $edit_program['program_type'] : '', 'special'); ?>>Special Event</option>
                                 </select>
                             </td>
                         </tr>
@@ -724,26 +756,29 @@ class Church_Branches_Generator_Admin {
                             <td>
                                 <select name="program_day" id="program_day">
                                     <option value="">Select a day</option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
-                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Monday'); ?>>Monday</option>
+                                    <option value="Tuesday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Tuesday'); ?>>Tuesday</option>
+                                    <option value="Wednesday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Wednesday'); ?>>Wednesday</option>
+                                    <option value="Thursday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Thursday'); ?>>Thursday</option>
+                                    <option value="Friday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Friday'); ?>>Friday</option>
+                                    <option value="Saturday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Saturday'); ?>>Saturday</option>
+                                    <option value="Sunday" <?php selected($edit_program ? $edit_program['day_of_week'] : '', 'Sunday'); ?>>Sunday</option>
                                 </select>
                             </td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="program_time">Time</label></th>
-                            <td><input name="program_time" id="program_time" type="text" class="regular-text" placeholder="e.g. 6:00 PM"></td>
+                            <td><input name="program_time" id="program_time" type="text" class="regular-text" placeholder="e.g. 6:00 PM" value="<?php echo $edit_program ? esc_attr($edit_program['time']) : ''; ?>"></td>
                         </tr>
                         <tr>
                             <th scope="row"><label for="program_location">Location</label></th>
-                            <td><input name="program_location" id="program_location" type="text" class="regular-text" placeholder="e.g. Main Hall"></td>
+                            <td><input name="program_location" id="program_location" type="text" class="regular-text" placeholder="e.g. Main Hall" value="<?php echo $edit_program ? esc_attr($edit_program['location']) : ''; ?>"></td>
                         </tr>
                     </table>
-                    <?php submit_button('Add Program', 'primary', 'cbg_save_program'); ?>
+                    <?php submit_button($edit_program ? 'Update Program' : 'Add Program', 'primary', 'cbg_save_program'); ?>
+                    <?php if ($edit_program): ?>
+                        <a href="?page=church-branches-programs&branch_id=<?php echo intval($branch_id); ?>" class="button">Cancel Edit</a>
+                    <?php endif; ?>
                 </form>
 
                 <h2>Programs for this Branch</h2>
@@ -770,6 +805,7 @@ class Church_Branches_Generator_Admin {
                                     <td><?php echo esc_html($program['time']); ?></td>
                                     <td><?php echo esc_html($program['location']); ?></td>
                                     <td>
+                                        <a href="?page=church-branches-programs&branch_id=<?php echo intval($branch_id); ?>&edit_program=<?php echo intval($program['id']); ?>" class="button button-small">Edit</a>
                                         <button class="button button-small button-link-delete cbg-delete-program" data-program-id="<?php echo intval($program['id']); ?>" data-branch-id="<?php echo intval($branch_id); ?>">Delete</button>
                                     </td>
                                 </tr>
@@ -787,6 +823,7 @@ class Church_Branches_Generator_Admin {
     }
 
     private function process_program_form($branch_id) {
+        $edit_id = intval($_POST['edit_program_id'] ?? 0);
         $program_name = sanitize_text_field($_POST['program_name']);
         $program_desc = wp_kses_post($_POST['program_desc'] ?? '');
         $program_type = sanitize_text_field($_POST['program_type']);
@@ -794,20 +831,37 @@ class Church_Branches_Generator_Admin {
         $program_time = sanitize_text_field($_POST['program_time'] ?? '');
         $program_location = sanitize_text_field($_POST['program_location'] ?? '');
 
-        $result = $this->program_handler->create_program(array(
-            'branch_id'    => $branch_id,
-            'program_name' => $program_name,
-            'description'  => $program_desc,
-            'program_type' => $program_type,
-            'day_of_week'  => $program_day,
-            'time'         => $program_time,
-            'location'     => $program_location,
-        ));
+        if ($edit_id > 0) {
+            $result = $this->program_handler->update_program($edit_id, array(
+                'program_name' => $program_name,
+                'description'  => $program_desc,
+                'program_type' => $program_type,
+                'day_of_week'  => $program_day,
+                'time'         => $program_time,
+                'location'     => $program_location,
+            ));
 
-        if (is_wp_error($result)) {
-            echo '<div class="notice notice-error"><p>Error creating program.</p></div>';
+            if (is_wp_error($result)) {
+                echo '<div class="notice notice-error"><p>Error updating program.</p></div>';
+            } else {
+                echo '<div class="notice notice-success is-dismissible"><p>Program updated successfully!</p></div>';
+            }
         } else {
-            echo '<div class="notice notice-success is-dismissible"><p>Program added successfully!</p></div>';
+            $result = $this->program_handler->create_program(array(
+                'branch_id'    => $branch_id,
+                'program_name' => $program_name,
+                'description'  => $program_desc,
+                'program_type' => $program_type,
+                'day_of_week'  => $program_day,
+                'time'         => $program_time,
+                'location'     => $program_location,
+            ));
+
+            if (is_wp_error($result)) {
+                echo '<div class="notice notice-error"><p>Error creating program.</p></div>';
+            } else {
+                echo '<div class="notice notice-success is-dismissible"><p>Program added successfully!</p></div>';
+            }
         }
     }
 
@@ -1137,5 +1191,39 @@ class Church_Branches_Generator_Admin {
         }
 
         wp_send_json_success('Program deleted successfully');
+    }
+
+    public function ajax_get_service() {
+        check_ajax_referer('cbg-admin-nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $service_id = intval($_POST['service_id']);
+        $service = $this->service_handler->get_service($service_id);
+
+        if (!$service) {
+            wp_send_json_error('Service not found');
+        }
+
+        wp_send_json_success($service);
+    }
+
+    public function ajax_get_program() {
+        check_ajax_referer('cbg-admin-nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $program_id = intval($_POST['program_id']);
+        $program = $this->program_handler->get_program($program_id);
+
+        if (!$program) {
+            wp_send_json_error('Program not found');
+        }
+
+        wp_send_json_success($program);
     }
 }
